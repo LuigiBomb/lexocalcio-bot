@@ -13,6 +13,7 @@ OVERRIDE_DATE = os.getenv("OVERRIDE_DATE", "").strip()
 
 ROME_TZ = ZoneInfo("Europe/Rome")
 
+# Solo competizioni free più sicure
 COMPETITIONS = {
     "SA": "🇮🇹 Serie A",
     "PL": "🏴 Premier League",
@@ -20,10 +21,9 @@ COMPETITIONS = {
     "PD": "🇪🇸 LaLiga",
     "FL1": "🇫🇷 Ligue 1",
     "CL": "🏆 Champions League",
-    "EL": "🏆 Europa League",
-    "ECL": "🏆 Conference League",
-    "CIT": "🇮🇹 Coppa Italia",
 }
+
+API_BASE_URL = "https://api.football-data.org/v4/competitions"
 
 TEAM_EMOJIS = {
     "Inter": "⚫",
@@ -87,8 +87,6 @@ TEAM_EMOJIS = {
     "Paris FC": "🔵",
 }
 
-API_URL = "https://api.football-data.org/v4/matches"
-
 
 def validate_env():
     missing = []
@@ -120,24 +118,24 @@ def fetch_matches_for_day():
         "X-Auth-Token": FOOTBALL_DATA_API_KEY,
     }
 
-    params = {
-        "dateFrom": day_api,
-        "dateTo": day_api,
-    }
+    all_matches = []
 
-    response = requests.get(API_URL, headers=headers, params=params, timeout=30)
-    response.raise_for_status()
+    for code in COMPETITIONS.keys():
+        url = f"{API_BASE_URL}/{code}/matches"
+        params = {
+            "dateFrom": day_api,
+            "dateTo": day_api,
+        }
 
-    payload = response.json()
-    matches = payload.get("matches", [])
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        response.raise_for_status()
 
-    filtered = []
-    for match in matches:
-        code = match.get("competition", {}).get("code")
-        if code in COMPETITIONS:
-            filtered.append(match)
+        payload = response.json()
+        matches = payload.get("matches", [])
 
-    return filtered
+        all_matches.extend(matches)
+
+    return all_matches
 
 
 def to_rome_time(utc_date):
@@ -190,7 +188,7 @@ def build_message(matches):
         code = match.get("competition", {}).get("code")
         grouped[code].append(match)
 
-    order = ["SA", "PL", "BL1", "PD", "FL1", "CL", "EL", "ECL", "CIT"]
+    order = ["SA", "PL", "BL1", "PD", "FL1", "CL"]
 
     shown_any = False
 
@@ -251,7 +249,7 @@ def main():
     print(f"Data usata: {get_target_date_strings()[0]}")
     print(f"Match trovati dopo il filtro: {len(matches)}")
 
-    for m in matches[:20]:
+    for m in matches[:30]:
         comp = m.get("competition", {}).get("code")
         home = m.get("homeTeam", {}).get("name")
         away = m.get("awayTeam", {}).get("name")
