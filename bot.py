@@ -176,8 +176,6 @@ def build_message(matches):
     _, day_msg = get_today_strings()
 
     lines = [
-        "<b>Lexo Calcio ⚽</b>",
-        "",
         f"📅 <b><u>Palinsesto {esc(day_msg)}</u></b>",
         ""
     ]
@@ -219,8 +217,7 @@ def build_message(matches):
         lines.append("")
 
     if not shown_any:
-        lines.append("<blockquote>Nessuna partita trovata oggi per le competizioni selezionate.</blockquote>")
-        lines.append("")
+        return None
 
     lines.append("🌟 @LexoCalcio")
     lines.append("💬 @LexoCalcioChat")
@@ -246,6 +243,11 @@ def main():
     validate_env()
     matches = fetch_matches_for_today()
     message = build_message(matches)
+
+    if not message:
+        print("Nessuna partita trovata: non pubblico nulla.")
+        return
+
     send_telegram_message(message)
     print("Messaggio pubblicato correttamente.")
 
