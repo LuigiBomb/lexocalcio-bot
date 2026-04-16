@@ -13,7 +13,6 @@ OVERRIDE_DATE = os.getenv("OVERRIDE_DATE", "").strip()
 
 ROME_TZ = ZoneInfo("Europe/Rome")
 
-# Solo competizioni free più sicure
 COMPETITIONS = {
     "SA": "🇮🇹 Serie A",
     "PL": "🏴 Premier League",
@@ -166,9 +165,14 @@ def clean_team_name(name):
     return replacements.get(name, name)
 
 
-def team_with_emoji(name):
+def home_team_with_emoji(name):
     emoji = TEAM_EMOJIS.get(name, "⚪")
     return f"{emoji} {name}"
+
+
+def away_team_with_emoji(name):
+    emoji = TEAM_EMOJIS.get(name, "⚪")
+    return f"{name} {emoji}"
 
 
 def esc(text):
@@ -210,7 +214,9 @@ def build_message(matches):
             away = clean_team_name(match.get("awayTeam", {}).get("name", "Trasferta"))
 
             quote_lines.append(esc(kickoff))
-            quote_lines.append(f"{esc(team_with_emoji(home))} 🆚 {esc(team_with_emoji(away))}")
+            quote_lines.append(
+                f"{esc(home_team_with_emoji(home))} 🆚 {esc(away_team_with_emoji(away))}"
+            )
             quote_lines.append("")
 
         while quote_lines and quote_lines[-1] == "":
