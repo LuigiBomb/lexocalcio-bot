@@ -1,0 +1,14 @@
+services:
+  - type: cron
+    name: lexocalcio-palinsesto
+    runtime: python
+    schedule: "0 8 * * *"
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python bot.py"
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        value: "@LexoCalcio"
+      - key: FOOTBALL_DATA_API_KEY
+        sync: false
