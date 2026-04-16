@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "@LexoCalcio")
 FOOTBALL_DATA_API_KEY = os.getenv("FOOTBALL_DATA_API_KEY", "")
+OVERRIDE_DATE = os.getenv("OVERRIDE_DATE", "").strip()
 
 ROME_TZ = ZoneInfo("Europe/Rome")
 
@@ -103,13 +104,17 @@ def validate_env():
         raise RuntimeError("Variabili ambiente mancanti: " + ", ".join(missing))
 
 
-def get_today_strings():
+def get_target_date_strings():
+    if OVERRIDE_DATE:
+        dt = datetime.strptime(OVERRIDE_DATE, "%Y-%m-%d")
+        return dt.strftime("%Y-%m-%d"), dt.strftime("%d/%m/%Y")
+
     now_rome = datetime.now(ROME_TZ)
     return now_rome.strftime("%Y-%m-%d"), now_rome.strftime("%d/%m/%Y")
 
 
-def fetch_matches_for_today():
-    day_api, _ = get_today_strings()
+def fetch_matches_for_day():
+    day_api, _ = get_target_date_strings()
 
     headers = {
         "X-Auth-Token": FOOTBALL_DATA_API_KEY,
@@ -173,7 +178,7 @@ def esc(text):
 
 
 def build_message(matches):
-    _, day_msg = get_today_strings()
+    _, day_msg = get_target_date_strings()
 
     lines = [
         f"📅 <b><u>Palinsesto {esc(day_msg)}</u></b>",
@@ -241,7 +246,18 @@ def send_telegram_message(text):
 
 def main():
     validate_env()
-    matches = fetch_matches_for_today()
+    matches = fetch_matches_for_day()
+
+    print(f"Data usata: {get_target_date_strings()[0]}")
+    print(f"Match trovati dopo il filtro: {len(matches)}")
+
+    for m in matches[:20]:
+        comp = m.get("competition", {}).get("code")
+        home = m.get("homeTeam", {}).get("name")
+        away = m.get("awayTeam", {}).get("name")
+        date = m.get("utcDate")
+        print(comp, date, home, "vs", away)
+
     message = build_message(matches)
 
     if not message:
