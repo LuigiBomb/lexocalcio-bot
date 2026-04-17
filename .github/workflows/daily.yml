@@ -2,11 +2,12 @@ name: Daily Telegram Schedule
 
 on:
   schedule:
-    - cron: "0 8 * * *"
+    - cron: "7 10 * * *"
+      timezone: "Europe/Rome"
   workflow_dispatch:
     inputs:
       override_date:
-        description: "Data da testare in formato YYYY-MM-DD"
+        description: "Date to test in YYYY-MM-DD format"
         required: false
         default: ""
 
@@ -15,18 +16,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Scarica il repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Installa Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Installa librerie
+      - name: Install libraries
         run: pip install -r requirements.txt
 
-      - name: Esegui il bot
+      - name: Run bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
